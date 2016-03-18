@@ -187,7 +187,7 @@ local function points_tags_tables(config)
                     points[string.format("%s%s%s", name_prefix, name_prefix_delimiter,
                                          field_out_name)] = value
                 -- Only add fields that are not requested to be skipped
-                elseif not config.skip_fields_str
+                elseif (not config.skip_fields_str and not config.keep_fields_str)
                 or (config.skip_fields and not skip_fields[field]) then
                     -- Set the name attribute of this table by concatenating
                     -- name_prefix with the name of this particular field
