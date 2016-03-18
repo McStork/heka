@@ -55,6 +55,16 @@ Config:
     from being mapped to the event altogether (useful if you don't want to
     use tags and embed them in the name_prefix instead).
 
+- keep_fields (string, optional, default nil)
+    Space delimited set of fields that should be included in the InfluxDB
+    measurements being generated. Any `fieldname` values of "Type", "Payload",
+    "Hostname", "Pid", "Logger", "Severity", or "EnvVersion" will be assumed
+    to refer to the corresponding field from the base message schema.
+    Any other values will be assumed to refer to a dynamic message field.
+    The magic value "**all_base**" can be used to include base fields to the
+    event altogether.
+    Any skip_fields configuration will be ignored if keep_fields is set.
+
 - source_value_field (string, optional, default nil)
     If the desired behavior of this encoder is to extract one field from the
     Heka message and feed it as a single line to InfluxDB, then use this option
@@ -146,6 +156,7 @@ local decoder_config = {
     name_prefix = read_config("name_prefix") or nil,
     name_prefix_delimiter = read_config("name_prefix_delimiter") or nil,
     skip_fields_str = read_config("skip_fields") or nil,
+    keep_fields_str = read_config("keep_fields") or nil,
     source_value_field = read_config("source_value_field") or nil,
     tag_fields_str = read_config("tag_fields") or "**all_base**",
     timestamp_precision = read_config("timestamp_precision") or "ms",

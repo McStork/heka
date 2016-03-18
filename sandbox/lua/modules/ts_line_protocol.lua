@@ -108,6 +108,7 @@ local function points_tags_tables(config)
     local name_prefix_delimiter = config.name_prefix_delimiter or ""
     local used_tag_fields = config.used_tag_fields
     local skip_fields = config.skip_fields
+    local keep_fields = config.keep_fields
 
     -- Initialize the tags table, including base field tag values in list if
     -- the magic **all** or **all_base** config values are defined.
@@ -181,6 +182,10 @@ local function points_tags_tables(config)
                     if field == config.source_value_field then
                         points[name_prefix] = value
                     end
+                -- Only add fields that are requested to be kept
+                elseif config.keep_fields_str and keep_fields[field] then
+                    points[string.format("%s%s%s", name_prefix, name_prefix_delimiter,
+                                         field_out_name)] = value
                 -- Only add fields that are not requested to be skipped
                 elseif not config.skip_fields_str
                 or (config.skip_fields and not skip_fields[field]) then
@@ -267,6 +272,7 @@ function set_config(client_config)
         name_prefix = false,
         name_prefix_delimiter = false,
         skip_fields_str = false,
+        keep_fields_str = false,
         source_value_field = false,
         tag_fields_str = "**all_base**",
         timestamp_precision = "ms",
@@ -282,9 +288,15 @@ function set_config(client_config)
 
     decimal_format_string = "%."..module_config.decimal_precision.."f"
 
+    -- Keep whitelist fields from the set of base fields that we use, and
+    -- create a table of dynamic fields to keep.
+    if module_config.keep_fields_str then
+        module_config.keep_fields,
+        module_config.keep_fields_all_base = field_util.field_map(client_config.keep_fields_str)
+        module_config.used_base_fields = field_util.used_base_fields(module_config.keep_fields)
     -- Remove blacklisted fields from the set of base fields that we use, and
     -- create a table of dynamic fields to skip.
-    if module_config.skip_fields_str then
+    elseif module_config.skip_fields_str then
         module_config.skip_fields,
         module_config.skip_fields_all_base = field_util.field_map(client_config.skip_fields_str)
         module_config.used_base_fields = field_util.used_base_fields(module_config.skip_fields)
