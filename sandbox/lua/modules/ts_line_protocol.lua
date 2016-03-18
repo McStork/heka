@@ -226,10 +226,23 @@ function influxdb_line_msg(config)
     -- newline delimited list of InfluxDB write API line protocol formatted
     -- values that are then injected back into the pipeline.
     for name, value in pairs(points) do
+        if type(value) == "boolean" then
+            tostring(value)
+        end
+        local t = type(value)
+
         -- Wrap in double quotes and escape embedded double quotes as defined
         -- by the protocol.
-        if type(value) == "string" then
-            value = string.format('"%s"', value:gsub('"', '\\"'))
+        if t == "string" then
+            if string.match(value, "^[%d.]+$") then
+                value = string.format(decimal_format_string, value)
+            else
+                value = string.format('"%s"', value:gsub('"', '\\"'))
+            end
+        end
+
+        if t == "number" then
+            value = string.format(decimal_format_string, value)
         end
 
         -- Always send numbers as formatted floats, so InfluxDB will accept
@@ -237,22 +250,20 @@ function influxdb_line_msg(config)
         -- time.  Forcing them to always be floats avoids this.  Use the
         -- decimal_precision config option to control the numbers after the
         -- decimal that are printed.
-        if type(value) == "number" or string.match(value, "^[%d.]+$") then
-            value = string.format(decimal_format_string, value)
-        end
-
-        -- Format the line differently based on the presence of tags
-        -- i.e. length of the tags table is > 0
-        local insert_str
-        if tags and #tags > 0 then
-            insert_str = string.format("%s,%s %s=%s %d", influxdb_kv_fmt(name),
-                                       table.concat(tags, ","),
-                                       config.value_field_key, value, message_timestamp)
-            table.insert(api_message, insert_str)
-        else
-            insert_str = string.format("%s %s=%s %d", influxdb_kv_fmt(name),
-                                       config.value_field_key, value, message_timestamp)
-            table.insert(api_message, insert_str)
+        if type(value) == "string" then
+            -- Format the line differently based on the presence of tags
+            -- i.e. length of the tags table is > 0
+            local insert_str
+            if tags and #tags > 0 then
+                insert_str = string.format("%s,%s %s=%s %d", influxdb_kv_fmt(name),
+                                           table.concat(tags, ","),
+                                           config.value_field_key, value, message_timestamp)
+                table.insert(api_message, insert_str)
+            else
+                insert_str = string.format("%s %s=%s %d", influxdb_kv_fmt(name),
+                                           config.value_field_key, value, message_timestamp)
+                table.insert(api_message, insert_str)
+            end
         end
     end
 

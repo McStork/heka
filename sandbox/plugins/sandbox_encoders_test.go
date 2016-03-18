@@ -286,6 +286,24 @@ func EncoderSpec(c gs.Context) {
 		c.Assume(err, gs.IsNil)
 		pack.Message.AddField(f)
 
+		f, err = message.NewField("strIntField", "123", "")
+		c.Assume(err, gs.IsNil)
+		err = f.AddValue("456")
+		c.Assume(err, gs.IsNil)
+		pack.Message.AddField(f)
+
+		f, err = message.NewField("boolField", true, "")
+		c.Assume(err, gs.IsNil)
+		err = f.AddValue(false)
+		c.Assume(err, gs.IsNil)
+		pack.Message.AddField(f)
+
+		f, err = message.NewField("nilField", nil, "")
+		c.Assume(err, gs.IsNil)
+		err = f.AddValue(nil)
+		c.Assume(err, gs.IsNil)
+		pack.Message.AddField(f)
+
 		pack.EncodeMsgBytes()
 
 		conf.ScriptFilename = "../lua/encoders/schema_influx_line.lua"
@@ -305,6 +323,12 @@ strField,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value="0_first"
 strField_vidx_1,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value="0_second" 54321000
 intField,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value=123.000000 54321000
 intField_vidx_1,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value=456.000000 54321000
+strIntField,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value=123.000000 54321000
+strIntField_vidx_1,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value=456.000000 54321000
+boolField,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value="true" 54321000
+boolField_vidx_1,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value="false" 54321000
+nilField,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value="nil" 54321000
+nilField_vidx_1,Logger=Logger,Type=my_type,Severity=4,Hostname=hostname value="nil" 54321000
 `
 			c.Expect(string(result), gs.Equals, expected)
 		})
